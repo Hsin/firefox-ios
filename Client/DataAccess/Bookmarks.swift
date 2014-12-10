@@ -24,14 +24,18 @@ public class BookmarkItem {
     }
 }
 
+/**
+ * Currently suitable for showing all bookmarks in a flat list.
+ */
 public protocol Bookmarks {
     var count: Int { get };
     func get(index: Int) -> BookmarkItem?;
 
-    func tableDataSource() -> UITableViewDataSource;
+    // These are often combined.
+    func tableDataSource() -> protocol<UITableViewDataSource, UITableViewDelegate>;
 }
 
-private class StubBookmarksUITableViewDataSource: NSObject, UITableViewDataSource {
+private class StubBookmarksUITableViewHandler: NSObject, UITableViewDataSource, UITableViewDelegate {
     private var bookmarks: Bookmarks;
 
     init(bookmarks: Bookmarks) {
@@ -74,6 +78,9 @@ private class StubBookmarksUITableViewDataSource: NSObject, UITableViewDataSourc
     }
 }
 
+/**
+ * A stub containing no bookmarks.
+ */
 public class StubBookmarks: Bookmarks {
     public var count: Int {
         return 0;
@@ -83,11 +90,14 @@ public class StubBookmarks: Bookmarks {
         return nil;
     }
 
-    public func tableDataSource() -> UITableViewDataSource {
-        return StubBookmarksUITableViewDataSource(bookmarks: self);
+    public func tableDataSource() -> protocol<UITableViewDataSource, UITableViewDelegate> {
+        return StubBookmarksUITableViewHandler(bookmarks: self);
     }
 }
 
+/**
+ * A stub that handles an immutable array of bookmarks on creation.
+ */
 public class ArrayBookmarks: Bookmarks {
     let bookmarks: [BookmarkItem];
 
@@ -103,7 +113,7 @@ public class ArrayBookmarks: Bookmarks {
         return self.bookmarks[index];
     }
 
-    public func tableDataSource() -> UITableViewDataSource {
-        return StubBookmarksUITableViewDataSource(bookmarks: self);
+    public func tableDataSource() -> protocol<UITableViewDataSource, UITableViewDelegate> {
+        return StubBookmarksUITableViewHandler(bookmarks: self);
     }
 }
