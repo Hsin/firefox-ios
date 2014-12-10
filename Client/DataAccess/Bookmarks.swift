@@ -3,3 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import Foundation
+
+public protocol Bookmarks {
+
+}
+
+// Lots of work needed on this.
+class BookmarkItem {
+    var title: String
+    var url: String
+
+    init(title: String, url: String) {
+        self.title = title
+        self.url = url
+    }
+}
