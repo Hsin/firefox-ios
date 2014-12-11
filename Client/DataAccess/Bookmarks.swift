@@ -99,28 +99,11 @@ public class BookmarksModel {
     // TODO: Move this to the authenticator when its available.
     let favicons: Favicons = BasicFavicons()
 
-
-    var queue: [BookmarkNode] = []
-
     init(modelFactory: BookmarksModelFactory, root: BookmarkFolder) {
         self.modelFactory = modelFactory
         self.root = root
     }
 
-    public func shareItem(item: ShareItem) {
-        let title = item.title == nil ? "Untitled" : item.title!
-
-        func exists(e: BookmarkNode) -> Bool {
-            if let bookmark = e as? BookmarkItem {
-                return bookmark.url == item.url;
-            }
-            return false;
-        }
-
-        // Don't create duplicates.
-        if (!contains(queue, exists)) {
-            queue.append(BookmarkItem(id: Bytes.generateGUID(), title: title, url: item.url))
-        }
     }
 
     /**
@@ -143,6 +126,26 @@ public class BookmarksModel {
      */
     public func reloadData(success: (BookmarksModel) -> (), failure: (Any) -> ()) {
         modelFactory.modelForFolder(root, success: success, failure: failure)
+    }
+}
+
+public class MemoryBookmarksSink: ShareToDestination {
+    var queue: [BookmarkNode] = []
+
+    public func shareItem(item: ShareItem) {
+        let title = item.title == nil ? "Untitled" : item.title!
+
+        func exists(e: BookmarkNode) -> Bool {
+            if let bookmark = e as? BookmarkItem {
+                return bookmark.url == item.url;
+            }
+            return false;
+        }
+
+        // Don't create duplicates.
+        if (!contains(queue, exists)) {
+            queue.append(BookmarkItem(id: Bytes.generateGUID(), title: title, url: item.url))
+        }
     }
 }
 
