@@ -18,8 +18,9 @@ class TestBookmarksProvider : BookmarksREST {
 }
 */
 
-public class BookmarksRESTModelFactory: BookmarksModelFactory {
+public class BookmarksRESTModelFactory: BookmarksModelFactory, ShareToDestination {
     private let account: Account
+    private let sink: MemoryBookmarksSink = MemoryBookmarksSink()
 
     init(account: Account) {
         self.account = account
@@ -87,19 +88,23 @@ public class BookmarksRESTModelFactory: BookmarksModelFactory {
         let f = MemoryBookmarkFolder(id: "unsorted", name: "Unsorted", children: resp)
         return BookmarksModel(modelFactory: self, root: f)
     }
-    
-    /// Send a ShareItem to this user's bookmarks
-    ///
-    /// :param: item    the item to be sent
-    ///
-    /// Note that this code currently uses NSURLSession directly because AlamoFire
-    /// does not work from an Extension. (Bug 1104884)
-    ///
-    /// Note that the bookmark will end up in the Unsorted Bookmarks. We have Bug
-    /// 1094233 open for the REST API to store the incoming item in the Mobile
-    /// Bookmarks instead.
-    /*
+
+    // Don't do uploading yet. We want to exercise merging.
     func shareItem(item: ShareItem) {
+        sink.shareItem(item)
+    }
+
+    /*
+        /// Send a ShareItem to this user's bookmarks
+        ///
+        /// :param: item    the item to be sent
+        ///
+        /// Note that this code currently uses NSURLSession directly because AlamoFire
+        /// does not work from an Extension. (Bug 1104884)
+        ///
+        /// Note that the bookmark will end up in the Unsorted Bookmarks. We have Bug
+        /// 1094233 open for the REST API to store the incoming item in the Mobile
+        /// Bookmarks instead.
         let request = NSMutableURLRequest(URL: NSURL(string: "https://moz-syncapi.sateh.com/1.0/bookmarks")!)
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("application/json", forHTTPHeaderField: "Accept")
@@ -122,6 +127,5 @@ public class BookmarksRESTModelFactory: BookmarksModelFactory {
         let session = NSURLSession(configuration: configuration, delegate: nil, delegateQueue: nil)
         let task = session.dataTaskWithRequest(request)
         task.resume()
-    }
-    */
+        */
 }

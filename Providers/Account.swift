@@ -39,7 +39,7 @@ class Account {
         logoutCallback(account: self)
     }
 
-    lazy var bookmarks: BookmarksModelFactory = {
+    lazy var bookmarks: protocol<BookmarksModelFactory, ShareToDestination> = {
         // Stubbed out to populate data from server.
         // Eventually this will be a SyncingBookmarksModel or an OfflineBookmarksModel, perhaps.
         return BookmarksRESTModelFactory(account: self)
