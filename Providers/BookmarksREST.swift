@@ -5,16 +5,7 @@
 import Foundation
 import Alamofire
 
-class Bookmark {
-    var title: String
-    var url: String
-
-    init(title: String, url: String) {
-        self.title = title
-        self.url = url
-    }
-}
-
+/*
 class TestBookmarksProvider : BookmarksREST {
     override func getAll(success: ([Bookmark]) -> (), error: (RequestError) -> ()) {
         var res = [Bookmark]()
@@ -25,30 +16,34 @@ class TestBookmarksProvider : BookmarksREST {
         success(res)
     }
 }
+*/
 
-class BookmarksREST: NSObject {
+public class BookmarksREST: BookmarksModel {
     private let account: Account
 
     init(account: Account) {
         self.account = account
     }
 
-    func getAll(success: ([Bookmark]) -> (), error: (RequestError) -> ()) {
+    override public func reloadData() {
         account.makeAuthRequest(
             "bookmarks/recent",
             success: { data in
-                 success(self.parseResponse(data));
+                self.parseResponse(data);
             },
-            error: error)
+            error: { error in
+                // TODO
+            })
     }
 
-    private func parseResponse(response: AnyObject?) -> [Bookmark] {
-        var resp : [Bookmark] = [];
+    private func parseResponse(response: AnyObject?) {
+        var resp : [BookmarkItem] = [];
 
         if let response: NSArray = response as? NSArray {
             for bookmark in response {
                 var title: String = ""
                 var url: String = ""
+                var guid: String
 
                 if let t = bookmark.valueForKey("title") as? String {
                     title = t
@@ -62,11 +57,17 @@ class BookmarksREST: NSObject {
                     continue;
                 }
 
-                resp.append(Bookmark(title: title, url: url))
+                if let id = bookmark.valueForKey("id") as? String {
+                    guid = id
+                } else {
+                    continue;
+                }
+
+                resp.append(BookmarkItem(id: guid, title: title, url: url))
             }
         }
 
-        return resp;
+        self.root.children = resp
     }
     
     /// Send a ShareItem to this user's bookmarks
@@ -79,7 +80,7 @@ class BookmarksREST: NSObject {
     /// Note that the bookmark will end up in the Unsorted Bookmarks. We have Bug
     /// 1094233 open for the REST API to store the incoming item in the Mobile
     /// Bookmarks instead.
-    
+    /*
     func shareItem(item: ShareItem) {
         let request = NSMutableURLRequest(URL: NSURL(string: "https://moz-syncapi.sateh.com/1.0/bookmarks")!)
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -104,4 +105,5 @@ class BookmarksREST: NSObject {
         let task = session.dataTaskWithRequest(request)
         task.resume()
     }
+    */
 }
