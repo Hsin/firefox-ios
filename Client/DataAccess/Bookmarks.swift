@@ -104,6 +104,11 @@ public class BookmarksModel {
         self.root = root
     }
 
+    /**
+     * Produce a new model rooted at the appropriate folder. Fails if the folder doesn't exist.
+     */
+    public func selectFolder(folder: BookmarkFolder, success: (BookmarksModel) -> (), failure: (Any) -> ()) {
+        modelFactory.modelForFolder(folder, success: success, failure: failure)
     }
 
     /**
