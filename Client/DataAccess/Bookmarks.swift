@@ -68,7 +68,7 @@ private class MemoryBookmarkFolder: BookmarkFolder {
         return createMockFavicon(UIImage(named: "bookmark_folder_closed.png")!)
     }
 
-    public var children: [BookmarkNode] = []
+    var children: [BookmarkNode] = []
 
     init(id: String, name: String) {
         self.id = id
@@ -88,7 +88,7 @@ public class BookmarksModel {
     // TODO: Move this to the authenticator when its available.
     let favicons: Favicons = BasicFavicons()
 
-    var root: MemoryBookmarkFolder
+    var root: BookmarkFolder
     var queue: [BookmarkNode] = []
 
     init() {
