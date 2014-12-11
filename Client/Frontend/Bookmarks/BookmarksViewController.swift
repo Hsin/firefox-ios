@@ -57,11 +57,7 @@ class BookmarksViewController: UITableViewController {
     private let FAVICON_SIZE = 32;
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell: UITableViewCell = tableView.dequeueReusableCellWithIdentifier(BOOKMARK_CELL_IDENTIFIER, forIndexPath: indexPath) as UITableViewCell;
-        
-        if let image = (UIImage(named: "leaf.png")) {
-            cell.imageView?.image = createMockFavicon(image)
-        }
-        
+
         let bookmark: BookmarkNode? = account.bookmarks.root.get(indexPath.row)
         
         cell.imageView?.image = bookmark?.icon
