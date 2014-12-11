@@ -8,7 +8,7 @@ private let BOOKMARK_CELL_IDENTIFIER = "BOOKMARK_CELL"
 private let BOOKMARK_HEADER_IDENTIFIER = "BOOKMARK_HEADER"
 
 class BookmarksViewController: UITableViewController {
-    var model: BookmarksModel!
+    var source: BookmarksModel!
     var _account: Account!
     var account: Account! {
         get {
@@ -17,8 +17,21 @@ class BookmarksViewController: UITableViewController {
 
         set (account) {
             self._account = account
-            self.model = account.bookmarks.nullModel
+            self.source = account.bookmarks.nullModel
         }
+    }
+
+    func onNewModel(model: BookmarksModel) {
+        // Switch out the model and redisplay.
+        self.source = model
+        dispatch_async(dispatch_get_main_queue()) {
+            self.refreshControl?.endRefreshing()
+            self.tableView.reloadData()
+        }
+    }
+
+    func onModelFailure(e: Any) {
+        // Do nothing.
     }
 
     override func viewDidLoad() {
@@ -36,18 +49,7 @@ class BookmarksViewController: UITableViewController {
     
 
     func reloadData() {
-        let onSuccess: (BookmarksModel) -> () = {model in
-            self.model = model
-            dispatch_async(dispatch_get_main_queue()) {
-                self.refreshControl?.endRefreshing()
-                self.tableView.reloadData()
-            }
-        }
-
-        let onFailure: (Any) -> () = {error in
-        }
-
-        self.model.reloadData(onSuccess, onFailure)
+        self.source.reloadData(self.onNewModel, self.onModelFailure)
     }
     
     func refresh() {
@@ -63,14 +65,14 @@ class BookmarksViewController: UITableViewController {
     }
     
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return model.root.count
+        return self.source.root.count
     }
     
     private let FAVICON_SIZE = 32;
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell: UITableViewCell = tableView.dequeueReusableCellWithIdentifier(BOOKMARK_CELL_IDENTIFIER, forIndexPath: indexPath) as UITableViewCell;
 
-        let bookmark: BookmarkNode? = self.model.root.get(indexPath.row)
+        let bookmark: BookmarkNode? = self.source.root.get(indexPath.row)
         
         cell.imageView?.image = bookmark?.icon
         cell.textLabel?.text = bookmark?.title
@@ -111,7 +113,7 @@ class BookmarksViewController: UITableViewController {
     
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         tableView.deselectRowAtIndexPath(indexPath, animated: false)
-        let bookmark = self.model.root.get(indexPath.row)
+        let bookmark = self.source.root.get(indexPath.row)
 
         switch (bookmark) {
         case let item as BookmarkItem:
