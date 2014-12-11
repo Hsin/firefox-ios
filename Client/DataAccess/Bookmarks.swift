@@ -83,18 +83,28 @@ public class MemoryBookmarkFolder: BookmarkFolder {
     }
 }
 
+/**
+ * A model is a snapshot of the bookmarks store, suitable for backing a table view.
+ *
+ * Navigation through the folder hierarchy produces a sequence of models.
+ *
+ * Changes to the backing store implicitly invalidates a subset of models.
+ *
+ * 'Refresh' means requesting a new model from the store.
+ */
 public class BookmarksModel {
+    let modelFactory: BookmarksModelFactory
+    let root: BookmarkFolder
+
     // TODO: Move this to the authenticator when its available.
     let favicons: Favicons = BasicFavicons()
 
-    var root: BookmarkFolder
+
     var queue: [BookmarkNode] = []
 
-    init() {
-        // TODO: make this database-backed.
-        let f = MemoryBookmarkFolder(id: "root", name: "Root")
-        f.children.append(MemoryBookmarkFolder(id: "mobile", name: "Mobile Bookmarks"))
-        self.root = f
+    init(modelFactory: BookmarksModelFactory, root: BookmarkFolder) {
+        self.modelFactory = modelFactory
+        self.root = root
     }
 
     public func shareItem(item: ShareItem) {
@@ -113,9 +123,60 @@ public class BookmarksModel {
         }
     }
 
-    // TODO: async.
-    public func reloadData(success: () -> (), failure: (Any) -> ()) {
+    /**
+     * Produce a new model rooted at the appropriate folder. Fails if the folder doesn't exist.
+     */
+    public func selectFolder(guid: String, success: (BookmarksModel) -> (), failure: (Any) -> ()) {
+        modelFactory.modelForFolder(guid, success: success, failure: failure)
+    }
 
+    /**
+     * Produce a new model rooted at the base of the hierarchy. Should never fail.
+     */
+    public func selectRoot(success: (BookmarksModel) -> (), failure: (Any) -> ()) {
+        modelFactory.modelForRoot(success, failure: failure)
+    }
+
+    /**
+     * Produce a new model rooted at the same place as this model. Can fail if
+     * the folder has been deleted from the backing store.
+     */
+    public func reloadData(success: (BookmarksModel) -> (), failure: (Any) -> ()) {
+        modelFactory.modelForFolder(root, success: success, failure: failure)
+    }
+}
+
+protocol BookmarksModelFactory {
+    func modelForFolder(folder: BookmarkFolder, success: (BookmarksModel) -> (), failure: (Any) -> ())
+    func modelForFolder(guid: String, success: (BookmarksModel) -> (), failure: (Any) -> ())
+
+    func modelForRoot(success: (BookmarksModel) -> (), failure: (Any) -> ())
+
+    // Whenever async construction is necessary, we fall into a pattern of needing
+    // a placeholder that behaves correctly for the period between kickoff and set.
+    var nullModel: BookmarksModel { get }
+}
+
+public class StubBookmarksModelFactory: BookmarksModelFactory {
+    func modelForFolder(folder: BookmarkFolder, success: (BookmarksModel) -> (), failure: (Any) -> ()) {
+        // A smart implementation would go back to the backing store
+        // to look up folder's GUID. We aren't smart.
+        success(BookmarksModel(modelFactory: self, root: folder))
+    }
+
+    func modelForFolder(guid: String, success: (BookmarksModel) -> (), failure: (Any) -> ()) {
+        success(BookmarksModel(modelFactory: self, root: MemoryBookmarkFolder(id: guid, name: "No name", children: [])))
+    }
+
+    func modelForRoot(success: (BookmarksModel) -> (), failure: (Any) -> ()) {
+        let m = MemoryBookmarkFolder(id: "mobile", name: "Mobile Bookmarks", children: [])
+        let f = MemoryBookmarkFolder(id: "root", name: "Root", children: [m])
+        success(BookmarksModel(modelFactory: self, root: f))
+    }
+
+    var nullModel: BookmarksModel {
+        let f = MemoryBookmarkFolder(id: "root", name: "Root", children: [])
+        return BookmarksModel(modelFactory: self, root: f)
     }
 }
 

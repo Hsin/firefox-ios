@@ -18,27 +18,42 @@ class TestBookmarksProvider : BookmarksREST {
 }
 */
 
-public class BookmarksREST: BookmarksModel {
+public class BookmarksRESTModelFactory: BookmarksModelFactory {
     private let account: Account
 
     init(account: Account) {
         self.account = account
     }
 
-    override public func reloadData(success: () -> (), failure: (Any) -> ()) {
+    func modelForFolder(folder: BookmarkFolder, success: (BookmarksModel) -> (), failure: (Any) -> ()) {
+        failure("Not supported")
+    }
+
+    func modelForFolder(guid: String, success: (BookmarksModel) -> (), failure: (Any) -> ()) {
+        failure("Not supported")
+    }
+
+
+    func modelForRoot(success: (BookmarksModel) -> (), failure: (Any) -> ()) {
         account.makeAuthRequest(
             "bookmarks/recent",
             success: { data in
-                self.parseResponse(data);
-                success()
+                success(self.parseResponse(data))
             },
             error: { error in
                 // TODO
                 failure(error)
-            })
+        })
     }
 
-    private func parseResponse(response: AnyObject?) {
+    // Return synchronously to allow for init. You can asynchronously reinit through the returned model.
+    // Better would be for the view controller to be prepared for this to arrive later.
+    var nullModel: BookmarksModel {
+        let f = MemoryBookmarkFolder(id: "stub", name: "", children: [])
+        return BookmarksModel(modelFactory: self, root: f)
+    }
+
+    func parseResponse(response: AnyObject?) -> BookmarksModel {
         var resp : [BookmarkItem] = [];
 
         if let response: NSArray = response as? NSArray {
@@ -69,7 +84,8 @@ public class BookmarksREST: BookmarksModel {
             }
         }
 
-        self.root.children = resp
+        let f = MemoryBookmarkFolder(id: "unsorted", name: "Unsorted", children: resp)
+        return BookmarksModel(modelFactory: self, root: f)
     }
     
     /// Send a ShareItem to this user's bookmarks
