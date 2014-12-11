@@ -25,23 +25,17 @@ class BookmarksViewController: UITableViewController {
     
 
     func reloadData() {
-        account.bookmarks.reloadData()
-        self.tableView.reloadData()
+        let onSuccess: () -> () = {
+            dispatch_async(dispatch_get_main_queue()) {
+                self.refreshControl?.endRefreshing()
+                self.tableView.reloadData()
+            }
+        }
 
-        /*
-        account.bookmarks.getAll(
-            { response in
-                self.bookmarks = response
-                dispatch_async(dispatch_get_main_queue()) {
-                    self.refreshControl?.endRefreshing()
-                    self.tableView.reloadData()
-                }
-            },
-            error: { err in
-                // TODO: Figure out a good way to handle this.
-                println("Error: could not load bookmarks")
-            })
-*/
+        let onFailure: (Any) -> () = {error in
+        }
+
+        account.bookmarks.reloadData(onSuccess, onFailure)
     }
     
     func refresh() {

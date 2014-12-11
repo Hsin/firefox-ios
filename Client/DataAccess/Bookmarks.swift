@@ -115,7 +115,7 @@ public class BookmarksModel {
     }
 
     // TODO: async.
-    public func reloadData() {
+    public func reloadData(success: () -> (), failure: (Any) -> ()) {
 
     }
 }

@@ -25,14 +25,16 @@ public class BookmarksREST: BookmarksModel {
         self.account = account
     }
 
-    override public func reloadData() {
+    override public func reloadData(success: () -> (), failure: (Any) -> ()) {
         account.makeAuthRequest(
             "bookmarks/recent",
             success: { data in
                 self.parseResponse(data);
+                success()
             },
             error: { error in
                 // TODO
+                failure(error)
             })
     }
 
