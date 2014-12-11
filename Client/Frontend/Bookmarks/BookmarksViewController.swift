@@ -123,6 +123,7 @@ class BookmarksViewController: UITableViewController {
 
         case let folder as BookmarkFolder:
             // Descend into the folder.
+            self.source.selectFolder(folder, success: self.onNewModel, failure: self.onModelFailure)
             break;
 
         default:
