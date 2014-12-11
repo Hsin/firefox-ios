@@ -6,16 +6,25 @@ import Foundation
 
 import UIKit
 
+/**
+ * The immutable base interface for bookmarks and folders.
+ */
 @objc public protocol BookmarkNode {
     var id: String { get }
     var title: String { get }
     var icon: UIImage { get }
 }
 
+/**
+ * An immutable item representing a bookmark.
+ *
+ * To modify this, issue changes against the model and wait for
+ * change notifications.
+ */
 public class BookmarkItem: BookmarkNode {
     public let id: String
-    public var url: String
-    public var title: String
+    public let url: String
+    public let title: String
 
     public var icon: UIImage {
         return createMockFavicon(UIImage(named: "leaf.png")!)
@@ -38,15 +47,24 @@ public class BookmarkItem: BookmarkNode {
     }
 }
 
+/**
+ * A folder is an immutable abstraction over a named
+ * thing that can return its child nodes by index.
+ */
 @objc public protocol BookmarkFolder: BookmarkNode {
     var count: Int { get }
     func get(index: Int) -> BookmarkNode?
 }
 
-public class MemoryBookmarkFolder: BookmarkFolder {
-    public let id: String
-    public var title: String
-    public var icon: UIImage {
+/**
+ * A folder that contains an array of children.
+ *
+ * You can mutate this array, but you shouldn't. It's only here until we build something better.
+ */
+private class MemoryBookmarkFolder: BookmarkFolder {
+    let id: String
+    let title: String
+    var icon: UIImage {
         return createMockFavicon(UIImage(named: "bookmark_folder_closed.png")!)
     }
 
@@ -57,26 +75,27 @@ public class MemoryBookmarkFolder: BookmarkFolder {
         self.title = name
     }
 
-    public var count: Int {
+    var count: Int {
         return children.count
     }
 
-    public func get(index: Int) -> BookmarkNode? {
+    func get(index: Int) -> BookmarkNode? {
         return children[index]
     }
 }
 
 public class BookmarksModel {
     // TODO: Move this to the authenticator when its available.
-    var favicons: Favicons = BasicFavicons()
+    let favicons: Favicons = BasicFavicons()
 
     var root: MemoryBookmarkFolder
     var queue: [BookmarkNode] = []
 
     init() {
         // TODO: make this database-backed.
-        self.root = MemoryBookmarkFolder(id: "root", name: "Root")
-        self.root.children.append(MemoryBookmarkFolder(id: "mobile", name: "Mobile Bookmarks"))
+        let f = MemoryBookmarkFolder(id: "root", name: "Root")
+        f.children.append(MemoryBookmarkFolder(id: "mobile", name: "Mobile Bookmarks"))
+        self.root = f
     }
 
     public func shareItem(item: ShareItem) {
