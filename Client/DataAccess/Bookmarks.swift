@@ -58,28 +58,27 @@ public class BookmarkItem: BookmarkNode {
 
 /**
  * A folder that contains an array of children.
- *
- * You can mutate this array, but you shouldn't. It's only here until we build something better.
  */
-private class MemoryBookmarkFolder: BookmarkFolder {
-    let id: String
-    let title: String
-    var icon: UIImage {
+public class MemoryBookmarkFolder: BookmarkFolder {
+    public let id: String
+    public let title: String
+    let children: [BookmarkNode]
+
+    public var icon: UIImage {
         return createMockFavicon(UIImage(named: "bookmark_folder_closed.png")!)
     }
 
-    var children: [BookmarkNode] = []
-
-    init(id: String, name: String) {
+    init(id: String, name: String, children: [BookmarkNode]) {
         self.id = id
         self.title = name
+        self.children = children
     }
 
-    var count: Int {
+    public var count: Int {
         return children.count
     }
 
-    func get(index: Int) -> BookmarkNode? {
+    public func get(index: Int) -> BookmarkNode? {
         return children[index]
     }
 }
